@@ -2,8 +2,8 @@ name: zdm_crawler
 
 on:
   #将下面两行代码取消注释
-  #schedule:
-    #- cron: "0/15 * * * *"
+  schedule:
+    - cron: "0/15 * * * *"
   workflow_dispatch:
     inputs:
       # 这个是手动触发工作流界面上的选项, 选择True时,即使未满足COMMIT_THRESHOLD提交阈值,也会生成提交记录
@@ -59,7 +59,7 @@ jobs:
       run: |
         mvn package
         cp ./target/zdm-0.0.1.jar ./zdm.jar
-    - name: main logic
+    - name: 279003350@qq.com
       env:
         #爬取数据时的最大翻页数量
         maxPageSize: 10
