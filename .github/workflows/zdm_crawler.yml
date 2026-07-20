@@ -59,7 +59,7 @@ jobs:
       run: |
         mvn package
         cp ./target/zdm-0.0.1.jar ./zdm.jar
-    - name: 279003350@qq.com
+    - name: main logic
       env:
         #爬取数据时的最大翻页数量
         maxPageSize: 10
