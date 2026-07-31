@@ -1,4 +1,5 @@
 name: zdm_crawler
+# 价格区间过滤配置见 price_rules.txt
 
 on:
   #将下面两行代码取消注释
@@ -67,6 +68,11 @@ jobs:
         minVoted: 0
         # 评论的数量>minComments,才会被推送,填0为都推送
         minComments: 5
+        # 全局价格区间，留空代表不启用；单品规则优先于全局区间
+        minPrice:
+        maxPrice:
+        # 单品价格规则文件，每行：关键词|最低价|最高价
+        PRICE_RULES_FILE: price_rules.txt
         # 优惠信息数量>MIN_PUSH_SIZE就会发邮件,否则积累到下一次触发任务再决定是否推送. 不建议填太小的数字,避免邮件太多了
         MIN_PUSH_SIZE: 1
         # 邮箱的smtp服务器地址(示例给出的是qq邮箱的配置,非qq邮箱需要进行修改)

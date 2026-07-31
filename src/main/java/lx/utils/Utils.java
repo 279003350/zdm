@@ -80,6 +80,24 @@ public class Utils {
         return number;
     }
 
+    /** Extracts a usable numeric price from strings such as "¥1,299.00" or "1299元". */
+    public static BigDecimal parsePrice(String price) {
+        if (price == null) {
+            return null;
+        }
+        String normalized = price.replace(",", "").replace("，", "").trim();
+        java.util.regex.Matcher matcher = java.util.regex.Pattern
+                .compile("[-+]?(?:\\d+(?:\\.\\d*)?|\\.\\d+)").matcher(normalized);
+        if (!matcher.find()) {
+            return null;
+        }
+        try {
+            return new BigDecimal(matcher.group());
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
     public static String ramdomUserAgent() {
         return USER_AGENTS.get(RandomUtils.nextInt(0, USER_AGENTS.size()));
     }
