@@ -1,4 +1,5 @@
 name: zdm_crawler
+# 价格区间过滤配置见 price_rules.txt
 
 on:
   #将下面两行代码取消注释
