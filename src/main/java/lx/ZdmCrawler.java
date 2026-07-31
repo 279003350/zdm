@@ -1,5 +1,6 @@
 package lx;
 
+import java.math.BigDecimal;
 import java.net.HttpCookie;
 import java.time.Duration;
 import java.time.Instant;
@@ -52,7 +53,9 @@ import cn.hutool.http.HttpException;
 import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpUtil;
 import lx.mapper.ZdmMapper;
+import lx.model.PriceRule;
 import lx.model.Zdm;
+import lx.utils.PriceRuleUtils;
 import lx.utils.StreamUtils;
 import lx.utils.Utils;
 
@@ -74,13 +77,16 @@ public class ZdmCrawler {
                 minVoted = Integer.parseInt(envMap.getOrDefault("minVoted", "0")),
                 minComments = Integer.parseInt(envMap.getOrDefault("minComments", "0")),
                 minPushSize = Integer.parseInt(envMap.getOrDefault("MIN_PUSH_SIZE", "0"));
+        BigDecimal minPrice = parsePriceBoundary(envMap.get("minPrice"));
+        BigDecimal maxPrice = parsePriceBoundary(envMap.get("maxPrice"));
+        List<PriceRule> priceRules = PriceRuleUtils.read(envMap.getOrDefault("PRICE_RULES_FILE", "price_rules.txt"));
         boolean detail = "true".equals(envMap.getOrDefault("detail", "false"));
 
         //获取待推送的优惠信息
         Collection<Zdm> zdms = obtainUnpushedArticles(maxPageSize);
 
         //根据各项规则执行过滤逻辑
-        zdms = processFilter(zdms, minVoted, minComments, detail);
+        zdms = processFilter(zdms, minVoted, minComments, minPrice, maxPrice, priceRules, detail);
         System.out.println("过滤后剩余数据条数" + zdms.size());
 
         //在推送之前先入库数据,pushed字段默认为0(未推送)
@@ -181,7 +187,9 @@ public class ZdmCrawler {
         }
     }
 
-    private static List<Zdm> processFilter(Collection<Zdm> zdms, int minVoted, int minComments, boolean detail) {
+    private static List<Zdm> processFilter(Collection<Zdm> zdms, int minVoted, int minComments,
+                                            BigDecimal minPrice, BigDecimal maxPrice,
+                                            List<PriceRule> priceRules, boolean detail) {
         //黑词过滤
         HashSet<String> blackWords = Utils.readFile("./black_words.txt");
         blackWords.removeIf(StringUtils::isBlank);
@@ -208,9 +216,10 @@ public class ZdmCrawler {
         //执行其他过滤规则
         List<Zdm> filtered = StreamUtils.filter(zdms, z ->
                 Integer.parseInt(z.getVoted()) > minVoted //值的数量
-                        && Integer.parseInt(z.getComments()) > minComments //评论的数量
-                        && !z.getPrice().contains("前") //不是前xxx名的耍猴抢购
-                        && !pushedIds.contains(z.getArticleId()) //不是已经推送过的
+                && Integer.parseInt(z.getComments()) > minComments //评论的数量
+                && !z.getPrice().contains("前") //不是前xxx名的耍猴抢购
+                && acceptsPrice(z, minPrice, maxPrice, priceRules)
+                && !pushedIds.contains(z.getArticleId()) //不是已经推送过的
         );
 
         filtered.forEach(o -> o.setPushed(false));
@@ -219,6 +228,31 @@ public class ZdmCrawler {
             filtered.forEach(z -> System.out.println(z.getArticleId() + " | " + z.getTitle()));
         }
         return filtered;
+    }
+
+    private static boolean acceptsPrice(Zdm z, BigDecimal minPrice, BigDecimal maxPrice, List<PriceRule> rules) {
+        BigDecimal price = Utils.parsePrice(z.getPrice());
+        PriceRule matched = rules.stream().filter(rule -> rule.matches(z.getTitle())).findFirst().orElse(null);
+        if (matched != null) {
+            return matched.accepts(price);
+        }
+        if (minPrice == null && maxPrice == null) {
+            return true;
+        }
+        return price != null
+                && (minPrice == null || price.compareTo(minPrice) >= 0)
+                && (maxPrice == null || price.compareTo(maxPrice) <= 0);
+    }
+
+    private static BigDecimal parsePriceBoundary(String value) {
+        if (StringUtils.isBlank(value)) {
+            return null;
+        }
+        try {
+            return new BigDecimal(value.replace(",", "").trim());
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("价格边界格式错误: " + value, e);
+        }
     }
 
     private static boolean pushToEmail(String text, String emailHost, String emailPort, String emailAccount, String emailPassword) {
