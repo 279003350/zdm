@@ -236,6 +236,11 @@ public class ZdmCrawler {
         if (matched != null) {
             return matched.accepts(price);
         }
+        //规则文件非空时按白名单模式运行: 未命中任何规则的优惠信息不推送
+        if (!rules.isEmpty()) {
+            return false;
+        }
+        //未配置任何价格条件时, 保持原有行为, 不因价格格式无法识别而过滤商品
         if (minPrice == null && maxPrice == null) {
             return true;
         }
