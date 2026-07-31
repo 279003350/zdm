@@ -8,9 +8,12 @@ public interface Const {
 
     String ZDM_DOMAIN = "faxian.smzdm.com";
 
-    //什么值得买排行榜数据接口地址
-    List<String> ZDM_URL = Lists.newArrayList("https://faxian.smzdm.com/json_more?filter=h2s0t0f0c3&page=",
-            "https://faxian.smzdm.com/json_more?filter=h3s0t0f0c3&page=");
+    //什么值得买排行榜数据接口地址（h0=最新, h2=3小时, h3=12小时, h4=24小时）
+    List<String> ZDM_URL = Lists.newArrayList(
+            "https://faxian.smzdm.com/json_more?filter=h0s0t0f0c3&page=",
+            "https://faxian.smzdm.com/json_more?filter=h2s0t0f0c3&page=",
+            "https://faxian.smzdm.com/json_more?filter=h3s0t0f0c3&page=",
+            "https://faxian.smzdm.com/json_more?filter=h4s0t0f0c3&page=");
 
     //WxPusher极简推送模式的链接
     String WXPUSHER_URL = "https://wxpusher.zjiecode.com/api/send/message/simple-push";
