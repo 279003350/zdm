@@ -63,11 +63,11 @@ jobs:
     - name: main logic
       env:
         #爬取数据时的最大翻页数量
-        maxPageSize: 20
+        maxPageSize: 5
         # 点值的数量>minVoted,才会被推送,填0为都推送
         minVoted: 0
         # 评论的数量>minComments,才会被推送,填0为都推送
-        minComments: 0
+        minComments: 4
         # 全局价格区间，留空代表不启用；单品规则优先于全局区间
         minPrice:
         maxPrice:
